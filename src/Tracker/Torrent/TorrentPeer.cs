@@ -5,53 +5,52 @@ using System.Threading.Tasks;
 using Tracker.Util;
 using System.Net;
 
-namespace Tracker
+namespace Tracker.Torrent
 {
 
     public class TorrentPeer
     {
         public byte[] IP;
-        public byte[] Port;
-        public TorrentPeer(int ip, short port)
+        public ushort Port;
+        public TorrentPeer(uint ip, ushort port)
         {
-            IP = Pack.Int32(ip);
-            Port = Pack.Int16(port);
+            IP = Pack.UInt32(ip);
+            Port = port;
         }
 
-        public TorrentPeer(string ip, short port)
+        public TorrentPeer(string ip, ushort port)
         {
             IP = IPAddress.Parse(ip).GetAddressBytes();
-            Port = Pack.Int16(port);
+            Port = port;
         }
 
-        public TorrentPeer(IPAddress ip, short port)
+        public TorrentPeer(IPAddress ip, ushort port)
         {
             IP = ip.GetAddressBytes();
-            Port = Pack.Int16(port);
+            Port = port;
         }
 
         public TorrentPeer(string redisResponse)
         {
             var parts = redisResponse.Split(':');
             IP = IPAddress.Parse(parts[0]).GetAddressBytes();
-            Port = Pack.Int16(short.Parse(parts[1]));
+            Port = (ushort.Parse(parts[1]));
         }
 
         public TorrentPeer(byte[] peer)
         {
             IP = UtilityFunctions.GetBytes(peer, 0, 4);
-            Port = UtilityFunctions.GetBytes(peer, 4, 2);
+            Port = Unpack.UInt16(peer,4);
         }
 
         public string StringPeer()
         {
-            short port = Unpack.Int16(Port, 0);
-            return GetIPString() + ":" + port.ToString();
+            return GetIPString() + ":" + Port.ToString();
         }
 
         public byte[] GetFormattedPair()
         {
-            return UtilityFunctions.Cat(IP, Port);
+            return UtilityFunctions.Cat(IP, Pack.UInt16(Port));
         }
 
         public string GetIPString()

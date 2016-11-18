@@ -8,14 +8,14 @@ namespace Tracker.Packets
 {
     public class ConnectRequest
     {
-        public Int64 ConnectionID;
-        public Int32 Action;
-        public Int32 TransactionID;
+        public UInt64 ConnectionID;
+        public UInt32 Action;
+        public UInt32 TransactionID;
         public ConnectRequest(byte[] response)
         {
-            ConnectionID = Unpack.Int64(response, 0);
-            Action = Unpack.Int32(response, 8);
-            TransactionID = Unpack.Int32(response, 12);
+            ConnectionID = Unpack.UInt64(response, 0);
+            Action = Unpack.UInt32(response, 8);
+            TransactionID = Unpack.UInt32(response, 12);
         }
 
     }

@@ -10,18 +10,18 @@ namespace Tracker.Packets
     {
         public byte[] Data;
 
-        public Int32 Action;
-        public Int32 TransactionID;
-        public Int64 ConnectionID;
-        public ConnectResponse(Int32 action, Int32 transaction, Int64 connection)
+        public UInt32 Action;
+        public UInt32 TransactionID;
+        public UInt64 ConnectionID;
+        public ConnectResponse(UInt32 action, UInt32 transaction, Int64 connection)
         {
             Action = action;
             TransactionID = transaction;
             ConnectionID = connection;
 
-            Data = Pack.Int32(Action).
-                Concat(Pack.Int32(TransactionID)).
-                Concat(Pack.Int64(ConnectionID)).ToArray();
+            Data = Pack.UInt32(Action).
+                Concat(Pack.UInt32(TransactionID)).
+                Concat(Pack.UInt64(ConnectionID)).ToArray();
         }
     }
 }

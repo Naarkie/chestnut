@@ -8,6 +8,7 @@ using System.IO;
 using System.Text;
 using Tracker.Packets;
 using Tracker.Util;
+using Tracker.Torrent;
 using StackExchange.Redis;
 
 namespace Tracker
@@ -73,6 +74,16 @@ namespace Tracker
             return peers;
         }
 
+        public static List<TorrentInfo> ScrapeHashes(List<byte[]> hashes)
+        {
+            List<TorrentInfo> list = new List<TorrentInfo>();
+            foreach(var hash in hashes)
+            {
+                list.Add(new TorrentInfo(hash, 1, 1, 0)); //oops
+            }
+            return list;
+        }
+
         public static void DoShit(UdpReceiveResult res, UdpClient client)
         {
             var receivedData = res.Buffer;
@@ -95,11 +106,11 @@ namespace Tracker
 
                     case 1:
                         var announceRequest = new AnnounceRequest(receivedData);
-                        announceRequest.Port = (short)res.RemoteEndPoint.Port;
                         //var address = endPointAddress.ToString();
 
-                        var peer = new TorrentPeer(addressString, (short)res.RemoteEndPoint.Port);
-                        Console.WriteLine("Announce from " + addressString + ":" + res.RemoteEndPoint.Port + ", " + (TorrentEvent)announceRequest.TorrentEvent);
+                        var peer = new TorrentPeer(addressString, (short)announceRequest.Port);
+                        Console.WriteLine("Announce from " + addressString + ":" + announceRequest.Port + ", " + (TorrentEvent)announceRequest.TorrentEvent);
+
                         if ((TorrentEvent)announceRequest.TorrentEvent != TorrentEvent.Stopped)
                             AddPeer(peer, announceRequest.InfoHash);
                         else
@@ -112,9 +123,17 @@ namespace Tracker
 
 
                     case 2:
-                        Console.WriteLine("scrape!");
+                        var scrapeRequest = new ScrapeRequest(receivedData);
+                        Console.WriteLine(string.Format("Scrape request from {0} for {1} torrents", addressString, scrapeRequest.InfoHashes.Count));
 
+                        var scrapedTorrents = ScrapeHashes(scrapeRequest.InfoHashes);
+                        var scrapeResponse = new ScrapeResponse(scrapeRequest.TransactionID, scrapedTorrents);
 
+                        client.SendAsync(scrapeResponse.Data, scrapeResponse.Data.Length, res.RemoteEndPoint);
+                        
+                        break;
+                    default:
+                        Console.WriteLine(Encoding.UTF8.GetString(receivedData));
                         break;
                 }
             }
