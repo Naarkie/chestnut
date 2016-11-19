@@ -13,7 +13,7 @@ namespace Tracker.Packets
         public UInt32 Action;
         public UInt32 TransactionID;
         public UInt64 ConnectionID;
-        public ConnectResponse(UInt32 action, UInt32 transaction, Int64 connection)
+        public ConnectResponse(UInt32 action, UInt32 transaction, UInt64 connection)
         {
             Action = action;
             TransactionID = transaction;

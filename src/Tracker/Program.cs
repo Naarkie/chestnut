@@ -68,8 +68,11 @@ namespace Tracker
 
             foreach(var peer in value)
             {
-                var peerResponse = (string)peer;
-                peers.Add(new TorrentPeer(peerResponse));
+                if(peer.HasValue)
+                {
+                    var peerResponse = (string)peer;
+                    peers.Add(new TorrentPeer(peerResponse));
+                }
             }
             return peers;
         }
@@ -108,7 +111,7 @@ namespace Tracker
                         var announceRequest = new AnnounceRequest(receivedData);
                         //var address = endPointAddress.ToString();
 
-                        var peer = new TorrentPeer(addressString, (short)announceRequest.Port);
+                        var peer = new TorrentPeer(addressString, (ushort)announceRequest.Port);
                         Console.WriteLine("Announce from " + addressString + ":" + announceRequest.Port + ", " + (TorrentEvent)announceRequest.TorrentEvent);
 
                         if ((TorrentEvent)announceRequest.TorrentEvent != TorrentEvent.Stopped)
@@ -117,7 +120,7 @@ namespace Tracker
                             RemovePeer(peer, announceRequest.InfoHash);
 
                         var peers = GetPeers(announceRequest.InfoHash);
-                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 10, 1, peers.Count, peers);
+                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 60, 1, (uint)peers.Count, peers);
                         client.SendAsync(announceResponse.Data, announceResponse.Data.Length, res.RemoteEndPoint);
                         break;
 
