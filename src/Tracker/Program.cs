@@ -29,7 +29,6 @@ namespace Tracker
                 var localEndpoint = new IPEndPoint(IPAddress.Any, 27775);
                 using (var udpClient = new UdpClient(localEndpoint))
                 {
-                    
                     while (true)
                     {
                         var receivedResults = await udpClient.ReceiveAsync();
@@ -103,7 +102,7 @@ namespace Tracker
                         Console.WriteLine("Connect from " + addressString + ":" + res.RemoteEndPoint.Port);
 
                         var connectResponse = new ConnectResponse(0, connectRequest.TransactionID, (long)13376969);
-                        client.SendAsync(connectResponse.Data, connectResponse.Data.Length, res.RemoteEndPoint);
+                        SendDataAsync(client,connectResponse.Data,  res.RemoteEndPoint);
                         break;
 
 
@@ -113,15 +112,15 @@ namespace Tracker
 
                         var peer = new TorrentPeer(addressString, (ushort)announceRequest.Port);
                         Console.WriteLine("Announce from " + addressString + ":" + announceRequest.Port + ", " + (TorrentEvent)announceRequest.TorrentEvent);
-
+                        Console.WriteLine(announceRequest.Downloaded + "," + announceRequest.Uploaded + "," + announceRequest.Left);
                         if ((TorrentEvent)announceRequest.TorrentEvent != TorrentEvent.Stopped)
                             AddPeer(peer, announceRequest.InfoHash);
                         else
                             RemovePeer(peer, announceRequest.InfoHash);
 
                         var peers = GetPeers(announceRequest.InfoHash);
-                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 60, 1, (uint)peers.Count, peers);
-                        client.SendAsync(announceResponse.Data, announceResponse.Data.Length, res.RemoteEndPoint);
+                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 30, 1, (uint)4, peers);
+                        SendDataAsync(client, announceResponse.Data, res.RemoteEndPoint);
                         break;
 
 
@@ -132,7 +131,7 @@ namespace Tracker
                         var scrapedTorrents = ScrapeHashes(scrapeRequest.InfoHashes);
                         var scrapeResponse = new ScrapeResponse(scrapeRequest.TransactionID, scrapedTorrents);
 
-                        client.SendAsync(scrapeResponse.Data, scrapeResponse.Data.Length, res.RemoteEndPoint);
+                        SendDataAsync(client, scrapeResponse.Data, res.RemoteEndPoint);
                         
                         break;
                     default:
@@ -144,6 +143,12 @@ namespace Tracker
             {
                 Console.WriteLine(Encoding.UTF8.GetString(receivedData));
             }
+        }
+
+        public static async void SendDataAsync(UdpClient client, byte[] data, IPEndPoint endpoint)
+        {
+            //Console.WriteLine(DateTime.Now.ToString() + " [Response to " + endpoint.Address.ToString() +"]\r\n");
+            await client.SendAsync(data, data.Length, endpoint);
         }
     }
 }
