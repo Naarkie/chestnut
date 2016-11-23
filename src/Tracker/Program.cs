@@ -32,7 +32,7 @@ namespace Tracker
                     while (true)
                     {
                         var receivedResults = await udpClient.ReceiveAsync();
-                        DoShit(receivedResults, udpClient);
+                        ReceivedData(receivedResults, udpClient);
                     }
                 }
             });
@@ -45,25 +45,36 @@ namespace Tracker
             Array.Copy(source, sourceIndex, destination, 0, destination.Length);
         }
 
-        public static void AddPeer(TorrentPeer peer, byte[] hash)
+        public static void AddPeer(TorrentPeer peer, byte[] hash, PeerType type = PeerType.Seeder)
         {
             var db = RedisConnection.GetDatabase();
             string insert = peer.StringPeer();
-            db.SetAdd("torrent:" + Unpack.Hex(hash), insert);
+            db.SetAdd("t:" + Unpack.Hex(hash), insert); //set of peers
+
+            if (type == PeerType.Seeder)
+                db.StringIncrement("s:" + Unpack.Hex(hash)); //amount of seeders
+            else
+                db.StringIncrement("l:" + Unpack.Hex(hash)); //amount of leechers
         }
 
-        public static void RemovePeer(TorrentPeer peer, byte[] hash)
+
+        public static void RemovePeer(TorrentPeer peer, byte[] hash, PeerType type = PeerType.Seeder)
         {
             var db = RedisConnection.GetDatabase();
             string insert = peer.StringPeer();
-            db.SetRemove("torrent:" + Unpack.Hex(hash), insert);
+            db.SetRemove("t:" + Unpack.Hex(hash), insert);
+
+            if (type == PeerType.Seeder)
+                db.StringDecrement("s:" + Unpack.Hex(hash));
+            else
+                db.StringDecrement("l:" + Unpack.Hex(hash));
         }
 
         public static List<TorrentPeer> GetPeers(byte[] hash)
         {
             var peers = new List<TorrentPeer>();
             var db = RedisConnection.GetDatabase();
-            var value = db.SetMembers("torrent:" + Unpack.Hex(hash));
+            var value = db.SetMembers("t:" + Unpack.Hex(hash));
 
             foreach(var peer in value)
             {
@@ -79,14 +90,17 @@ namespace Tracker
         public static List<TorrentInfo> ScrapeHashes(List<byte[]> hashes)
         {
             List<TorrentInfo> list = new List<TorrentInfo>();
+            var db = RedisConnection.GetDatabase();
             foreach(var hash in hashes)
             {
-                list.Add(new TorrentInfo(hash, 1, 1, 0)); //oops
+                var seeders = db.StringGet("s:" + hash);
+                var leechers = db.StringGet("l:" + hash);
+                list.Add(new TorrentInfo(hash, uint.Parse(seeders), uint.Parse(seeders), uint.Parse(leechers)));
             }
             return list;
         }
 
-        public static void DoShit(UdpReceiveResult res, UdpClient client)
+        public static void ReceivedData(UdpReceiveResult res, UdpClient client)
         {
             var receivedData = res.Buffer;
             var endPointAddress = res.RemoteEndPoint.Address;
@@ -113,13 +127,15 @@ namespace Tracker
                         var peer = new TorrentPeer(addressString, (ushort)announceRequest.Port);
                         Console.WriteLine("Announce from " + addressString + ":" + announceRequest.Port + ", " + (TorrentEvent)announceRequest.TorrentEvent);
                         Console.WriteLine(announceRequest.Downloaded + "," + announceRequest.Uploaded + "," + announceRequest.Left);
+
                         if ((TorrentEvent)announceRequest.TorrentEvent != TorrentEvent.Stopped)
                             AddPeer(peer, announceRequest.InfoHash);
                         else
                             RemovePeer(peer, announceRequest.InfoHash);
 
                         var peers = GetPeers(announceRequest.InfoHash);
-                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 30, 1, (uint)4, peers);
+                        var info = ScrapeHashes(new List<byte[]>() { announceRequest.InfoHash });
+                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, 60, info[0].Leechers, info[0].Seeders, peers);
                         SendDataAsync(client, announceResponse.Data, res.RemoteEndPoint);
                         break;
 

@@ -12,6 +12,13 @@ namespace Tracker.Util
         Started = 2,
         Stopped = 3
     }
+
+    public enum PeerType
+    {
+        Seeder,
+        Leecher,
+        Unknown
+    }
     public static class UtilityFunctions
     {
         public static bool GetBit(this byte t, UInt16 n)
@@ -44,26 +51,6 @@ namespace Tracker.Util
             second.CopyTo(returnBytes, first.Length);
 
             return returnBytes;
-        }
-
-        public static bool Contains<T>(this T[] ar, T o)
-        {
-            foreach (T t in ar)
-            {
-                if (Equals(t, o)) return true;
-            }
-
-            return false;
-        }
-
-        public static bool Contains<T>(this T[] ar, Func<T, bool> expr)
-        {
-            foreach (T t in ar)
-            {
-                if (expr != null && expr(t)) return true;
-            }
-
-            return false;
         }
     }
 }

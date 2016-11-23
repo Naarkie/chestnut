@@ -13,6 +13,8 @@ namespace Tracker.Torrent
         public UInt32 Completed;
         public UInt32 Leechers;
 
+        public List<TorrentPeer> Peers;
+
         public TorrentInfo(byte[] hash, uint seeders, uint completed, uint leechers)
         {
             InfoHash = hash;
