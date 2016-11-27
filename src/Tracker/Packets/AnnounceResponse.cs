@@ -8,12 +8,10 @@ using System.Net;
 
 namespace Tracker.Packets
 {
-    public class AnnounceResponse
+    public class AnnounceResponse:Packet
     {
         public byte[] Data;
 
-        public UInt32 Action;
-        public UInt32 TransactionID;
         public UInt32 Interval;
         public UInt32 Leechers;
         public UInt32 Seeders;
@@ -23,6 +21,7 @@ namespace Tracker.Packets
         {
             Action = 1;
             TransactionID = transaction;
+
             Interval = interval;
             Leechers = leechers;
             Seeders = seeders;
@@ -42,6 +41,7 @@ namespace Tracker.Packets
         {
             Action = 1;
             TransactionID = transaction;
+
             Interval = interval;
             Leechers = leechers;
             Seeders = seeders;

@@ -8,12 +8,9 @@ using System.Net;
 
 namespace Tracker.Packets
 {
-    public class ScrapeResponse
+    public class ScrapeResponse : Packet
     {
         public byte[] Data;
-
-        public UInt32 TransactionID;
-        public UInt32 Action;
         public List<TorrentInfo> ScrapeInfo;
 
         public ScrapeResponse(UInt32 transactionID, List<TorrentInfo> scrapeInfo)

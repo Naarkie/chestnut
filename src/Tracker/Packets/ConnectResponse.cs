@@ -6,12 +6,10 @@ using Tracker.Util;
 
 namespace Tracker.Packets
 {
-    public class ConnectResponse
+    public class ConnectResponse : Packet
     {
         public byte[] Data;
 
-        public UInt32 Action;
-        public UInt32 TransactionID;
         public UInt64 ConnectionID;
         public ConnectResponse(UInt32 action, UInt32 transaction, UInt64 connection)
         {

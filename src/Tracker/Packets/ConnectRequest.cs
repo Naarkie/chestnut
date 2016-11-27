@@ -6,11 +6,9 @@ using Tracker.Util;
 
 namespace Tracker.Packets
 {
-    public class ConnectRequest
+    public class ConnectRequest : Packet
     {
         public UInt64 ConnectionID;
-        public UInt32 Action;
-        public UInt32 TransactionID;
         public ConnectRequest(byte[] response)
         {
             ConnectionID = Unpack.UInt64(response, 0);

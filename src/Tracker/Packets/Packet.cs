@@ -7,16 +7,8 @@ namespace Tracker.Packets
 {
     public class Packet
     {
-        public List<object> Components { get; set; }
-        public void FullBacking()
-        {
-            List<byte[]> bytes = new List<byte[]>();
-            foreach(object component in Components)
-            {
-                //bytes.Add(BitConverter.GetBytes(component));
-            }
+        public UInt32 Action;
+        public UInt32 TransactionID;
 
-            //return result;
-        }
     }
 }

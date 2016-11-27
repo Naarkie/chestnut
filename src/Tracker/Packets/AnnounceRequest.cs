@@ -7,11 +7,9 @@ using Tracker.Torrent;
 
 namespace Tracker.Packets
 {
-    public class AnnounceRequest
+    public class AnnounceRequest : Packet
     {
         public UInt64 ConnectionID;
-        public UInt32 Action;
-        public UInt32 TransactionID;
         public byte[] InfoHash = new byte[20];
         public byte[] PeerID = new byte[20];
         public UInt64 Downloaded;
@@ -27,8 +25,10 @@ namespace Tracker.Packets
         public AnnounceRequest(byte[] data)
         {
             ConnectionID = Unpack.UInt64(data, 0);
+
             Action = Unpack.UInt32(data, 8);
             TransactionID = Unpack.UInt32(data, 12);
+                
             InfoHash = UtilityFunctions.GetBytes(data, 16, 20);
             PeerID = UtilityFunctions.GetBytes(data, 36, 20);
             Downloaded = Unpack.UInt64(data, 56);
@@ -39,11 +39,6 @@ namespace Tracker.Packets
             Key = Unpack.UInt64(data, 88);
             NumWanted = Unpack.UInt32(data, 92);
             Port = Unpack.UInt16(data, 96);
-
-            if(Port < 0)
-            {
-            //    Port += ushort.MaxValue;
-            }
         }
     }
 }

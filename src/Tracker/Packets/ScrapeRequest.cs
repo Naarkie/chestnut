@@ -6,11 +6,9 @@ using Tracker.Util;
 
 namespace Tracker.Packets
 {
-    public class ScrapeRequest
+    public class ScrapeRequest : Packet
     {
         public UInt64 ConnectionID;
-        public UInt32 Action;
-        public UInt32 TransactionID;
         public List<byte[]> InfoHashes = new List<byte[]>();
 
 
