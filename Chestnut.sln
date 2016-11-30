@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Tracker", "src\Tracker\Tracker.xproj", "{3BA1E507-4D72-405D-895A-D6AB3EC16A27}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Chestnut", "src\Chestnut\Chestnut.xproj", "{3BA1E507-4D72-405D-895A-D6AB3EC16A27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StackExchange.Redis;
-using Tracker.Packets;
-using Tracker.Util;
-using Tracker.Torrent;
+using Chestnut.Packets;
+using Chestnut.Util;
+using Chestnut.Torrent;
 
-namespace Tracker
+namespace Chestnut
 {
     public class MemCache
     {

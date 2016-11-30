@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tracker.Util;
-using Tracker.Torrent;
+using Chestnut.Util;
+using Chestnut.Torrent;
 using System.Net;
 
-namespace Tracker.Packets
+namespace Chestnut.Packets
 {
     public class AnnounceResponse:Packet
     {

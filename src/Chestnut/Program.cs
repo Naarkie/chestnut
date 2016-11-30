@@ -8,7 +8,7 @@ using System.IO;
 using System.Text;
 using StackExchange.Redis;
 
-namespace Tracker
+namespace Chestnut
 {
     public class Program
     {

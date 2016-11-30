@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tracker.Util;
+using Chestnut.Util;
 using System.Net;
 
-namespace Tracker.Torrent
+namespace Chestnut.Torrent
 {
 
     public class TorrentPeer

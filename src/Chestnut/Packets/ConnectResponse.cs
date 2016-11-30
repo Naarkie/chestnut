@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tracker.Util;
+using Chestnut.Util;
 
-namespace Tracker.Packets
+namespace Chestnut.Packets
 {
     public class ConnectResponse : Packet
     {

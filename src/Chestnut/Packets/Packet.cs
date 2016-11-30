@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Tracker.Packets
+namespace Chestnut.Packets
 {
     public class Packet
     {
