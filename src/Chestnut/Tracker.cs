@@ -27,7 +27,10 @@ namespace Chestnut
         {
             RedisBacking = new MemCache(StackExchange.Redis.ConnectionMultiplexer.Connect("localhost:6379"));
             ListenPort = port;
-            
+
+            RedisBacking.AddPeer(new TorrentPeer("127.0.0.1", 80), new byte[] { 1, 2, 3 },PeerType.Leecher);
+            var info = RedisBacking.ScrapeHash(new byte[] { 1, 2, 3 });
+            Console.WriteLine();
         }
 
         public void Start()
@@ -84,21 +87,20 @@ namespace Chestnut
                             RedisBacking.RemovePeer(peer, announceRequest.InfoHash);
 
                         var peers = RedisBacking.GetPeers(announceRequest.InfoHash);
-                        var torrentInfo = RedisBacking.ScrapeHashes(new List<byte[]>() { announceRequest.InfoHash });
-                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, AnnounceInterval, torrentInfo.First().Leechers, torrentInfo.First().Seeders, peers);
+                        var torrentInfo = RedisBacking.ScrapeHash(announceRequest.InfoHash);
+
+                        var announceResponse = new AnnounceResponse(announceRequest.TransactionID, AnnounceInterval, torrentInfo.Leechers, torrentInfo.Seeders, peers);
                         SendDataAsync(client, announceResponse.Data, res.RemoteEndPoint);
                         break;
-
 
                     case 2:
                         var scrapeRequest = new ScrapeRequest(receivedData);
                         Console.WriteLine(string.Format("[Scrape] from {0} for {1} torrents", addressString, scrapeRequest.InfoHashes.Count));
 
                         var scrapedTorrents = RedisBacking.ScrapeHashes(scrapeRequest.InfoHashes);
+
                         var scrapeResponse = new ScrapeResponse(scrapeRequest.TransactionID, scrapedTorrents);
-
                         SendDataAsync(client, scrapeResponse.Data, res.RemoteEndPoint);
-
                         break;
                     default:
                         Console.WriteLine(Encoding.UTF8.GetString(receivedData));
