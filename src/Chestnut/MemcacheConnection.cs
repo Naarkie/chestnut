@@ -17,13 +17,18 @@ namespace Chestnut
             RedisBacking = redis;
         }
 
-        public void AddPeer(TorrentPeer peer, byte[] hash, PeerType type = PeerType.Seeder)
+        public void AddPeer(TorrentPeer peer, byte[] hash, DateTime time, PeerType type = PeerType.Seeder)
         {
             var db = RedisBacking.GetDatabase();
-            string insert = peer.StringPeer();
+
+            string peerString = peer.StringPeer();
             var stringHash = Unpack.Hex(hash);
 
-            db.SetAdd("t:" + stringHash, insert);
+            var firstAdd = db.SetAdd("torrents", stringHash); //keep list of all torrents being managed
+            if (firstAdd)
+                Console.WriteLine("Registering " + hash);
+
+            db.SortedSetAdd("t:" + stringHash, peerString, UtilityFunctions.GetUnixTimestamp(time));
 
             if (type == PeerType.Seeder)
                 db.HashIncrement("p:" + stringHash, "seeders");
@@ -31,34 +36,53 @@ namespace Chestnut
                 db.HashIncrement("p:" + stringHash, "leechers");
         }
 
-
         public void RemovePeer(TorrentPeer peer, byte[] hash, PeerType type = PeerType.Seeder)
         {
+            RemovePeer(peer, Unpack.Hex(hash), type);
+        }
+
+
+        public void RemovePeer(TorrentPeer peer, string hashString, PeerType type = PeerType.Seeder)
+        {
             var db = RedisBacking.GetDatabase();
-            string insert = peer.StringPeer();
-            var stringHash = Unpack.Hex(hash);
 
-            db.SetRemove("t:" + stringHash, insert);
+            string peerString = peer.StringPeer();
+            
+            db.SortedSetRemove("t:" + hashString, peerString);
 
-            var fields = db.HashGetAll("p:" + stringHash);
+            var cardinality = db.SortedSetLength("t:" + hashString);
+            if (cardinality == 0)
+            {
+                db.SetRemove("torrents", hashString);
+                Console.WriteLine("Deregistering " + hashString);
+            }
+                
+            Console.WriteLine("Removed " + peerString + " from " + hashString + "," + cardinality + " left");
+
+            var fields = db.HashGetAll("p:" + hashString);
             foreach (var field in fields)
             {
                 var value = int.Parse(field.Value);
 
-                if(field.Name == "seeders" && value > 0 && type == PeerType.Seeder)
-                    db.HashDecrement("p:" + stringHash, "seeders");
+                if (field.Name == "seeders" && value > 0 && type == PeerType.Seeder)
+                    db.HashDecrement("p:" + hashString, "seeders");
 
                 if (field.Name == "leechers" && value > 0 && type == PeerType.Leecher)
-                    db.HashDecrement("p:" + stringHash, "leechers");
+                    db.HashDecrement("p:" + hashString, "leechers");
 
             }
+
         }
 
-        public List<TorrentPeer> GetPeers(byte[] hash)
+        public List<TorrentPeer> GetPeers(byte[] hash, int maxNum = 100)
         {
-            var peers = new List<TorrentPeer>();
             var db = RedisBacking.GetDatabase();
-            var value = db.SetMembers("t:" + Unpack.Hex(hash));
+
+            var hashString = Unpack.Hex(hash);
+            var peers = new List<TorrentPeer>();
+
+            //TODO: choose random subset of peerslist
+            var value = db.SortedSetRangeByRank("t:" + Unpack.Hex(hash), 0, maxNum, Order.Descending);
 
             foreach (var peer in value)
             {
@@ -75,6 +99,35 @@ namespace Chestnut
         {
             return ScrapeHashes(new List<byte[]> { hash }).First();
         }
+
+        public int PurgeAllOldPeers(TimeSpan timeCutoff)
+        {
+            var db = RedisBacking.GetDatabase();
+
+            var torrents = db.SetMembers("torrents");
+            foreach (var hash in torrents)
+            {
+                var dateCutoff = UtilityFunctions.GetUnixTimestamp(DateTime.Now - timeCutoff);
+
+                if (hash.HasValue)
+                {
+                    string torrentHash = System.Text.Encoding.ASCII.GetString((byte[])hash);
+                    var peersToDelete = db.SortedSetRangeByScore("t:" + torrentHash, double.NegativeInfinity, dateCutoff);
+
+                    foreach(var peer in peersToDelete)
+                    {
+                        if (peer.HasValue)
+                        {
+                            var peerString = (string)peer;
+                            RemovePeer(new TorrentPeer(peerString), torrentHash);
+                        }
+                    }
+                }
+            }
+
+            return 0;
+        }
+
 
         public List<TorrentInfo> ScrapeHashes(List<byte[]> hashes)
         {

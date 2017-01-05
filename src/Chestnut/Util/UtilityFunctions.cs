@@ -5,6 +5,12 @@ using System.Threading.Tasks;
 
 namespace Chestnut.Util
 {
+    public enum TorrentAction
+    {
+        Connect = 0,
+        Announce = 1,
+        Scrape = 2
+    }
     public enum TorrentEvent
     {
         None = 0,
@@ -29,6 +35,14 @@ namespace Chestnut.Util
         public static byte SetBit(this byte t, UInt16 n)
         {
             return (byte)(t | (1 << n));
+        }
+
+        private static readonly DateTime UnixEpoch =
+            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        public static double GetUnixTimestamp(DateTime date)
+        {
+            return (double)(date - UnixEpoch).TotalMilliseconds;
         }
 
         public static byte[] GetBytes(this byte[] bytes, Int32 start, Int32 length = -1)

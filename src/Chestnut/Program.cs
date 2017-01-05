@@ -16,6 +16,7 @@ namespace Chestnut
         {
             Tracker tracker = new Tracker(6969);
             tracker.AnnounceInterval = 60;
+
             tracker.Start();
 
             Console.ReadKey();
